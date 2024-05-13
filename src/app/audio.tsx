@@ -49,6 +49,10 @@ export default function Feed() {
       file: recording.getURI(),
     });
 
+    const bufferFile = await fetch(recording?.getURI() ?? '');
+
+    console.log(bufferFile, 'bufferFile');
+
     setRecordings(allRecordings);
   }
 
@@ -92,6 +96,7 @@ export default function Feed() {
             <Button
               label="Play"
               onPress={() => {
+                console.log('Playing sound');
                 recordingLine.sound.replayAsync();
               }}
             />
