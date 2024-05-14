@@ -1,4 +1,6 @@
+/* eslint-disable react-native/no-inline-styles */
 import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useState } from 'react';
 import Animated, {
   useAnimatedStyle,
@@ -10,6 +12,7 @@ import Animated, {
 
 import {
   Button,
+  colors,
   FocusAwareStatusBar,
   Image,
   Pressable,
@@ -19,11 +22,80 @@ import {
   View,
 } from '@/ui';
 
+function filterMongolianCyrillicAndPunctuation(input: string): string {
+  // This regex matches any character that is NOT Mongolian Cyrillic, a dot, or a comma
+  // and replaces it with an empty string, effectively removing it.
+  // Includes the additional Mongolian Cyrillic characters Өө and Үү.
+  const regex = /[^а-яА-ЯёЁөӨүҮ.,\s]+/g;
+  return input.replace(regex, '');
+}
+
 export default function Feed() {
   const [recording, setRecording] = useState<Audio.Recording | undefined>();
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [sound, setSound] = useState<any>();
   const [recordings, setRecordings] = useState<any>([]);
+
+  const makeAudio = async (text: string) => {
+    try {
+      console.log('START');
+
+      text = filterMongolianCyrillicAndPunctuation(text).toLowerCase();
+
+      console.log('TEST');
+      console.log('TEST');
+
+      console.log(text.trim());
+
+      console.log('TEST');
+      console.log('TEST');
+
+      const response = await fetch('https://api.chimege.com/v1.2/synthesize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'plain/text',
+          Token:
+            '0fd81b1cd65104dab495ed69fce6834a039853273e1f2fd929cfa9f4700c4eae',
+          'voice-id': 'MALE3v2',
+        },
+        body: text,
+      });
+      const randomNumber = Math.floor(Math.random() * 1000000);
+
+      console.log(response, 'response');
+
+      const arrayBuffer = await response.arrayBuffer();
+
+      const uploadUrl = await fetch(
+        `https://www.arbitration.mn/api/file/simple-put?name=${randomNumber}.wav&caseId=hackaton`
+      ).then((res) => res.json());
+
+      console.log(uploadUrl, 'uploadUrl');
+
+      // upload to s3
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'audio/wav',
+        },
+        body: arrayBuffer,
+      });
+
+      const playable = new Audio.Sound();
+
+      await playable.loadAsync({
+        uri: `https://cdn.arbitration.mn/cases/hackaton/${randomNumber}.wav`,
+      });
+
+      await playable.playAsync();
+    } catch (e) {
+      console.log('ERROR');
+      console.log('ERROR');
+      console.log(e);
+      console.log('ERROR');
+      console.log('ERROR');
+    }
+  };
 
   async function startRecording() {
     try {
@@ -68,26 +140,23 @@ export default function Feed() {
     const blob = await bufferFile.blob();
 
     let formData = new FormData();
-    formData.append('file', blob); // Assuming the API accepts the file with a 'file' key.
+    formData.append('file', blob);
 
     const response = await fetch('https://api.chimege.com/v1.2/transcribe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/octet-stream',
-        Punctuate: 'true', // Custom headers might not be supported here.
+        Punctuate: 'true',
         Token:
           '4dfec85d3220a8c97d813beaf2de2508a34cfb0a4cdd1b3c650cd2f23fee2542',
       },
       body: blob, // Sent as binary data.
     });
 
-    const text = await response.text();
-    console.log(text, 'text');
+    // only 300 character limit
+    const text = (await response.text()).slice(0, 299);
 
-    const jsonized = await response.json();
-    console.log(jsonized, 'jsonized');
-
-    setRecordings(allRecordings);
+    makeAudio(text);
   }
 
   function getDurationFormatted(milliseconds: number) {
@@ -163,30 +232,41 @@ export default function Feed() {
     animatedWidth.value = 40;
   };
   // 0fd81b1cd65104dab495ed69fce6834a039853273e1f2fd929cfa9f4700c4eae
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View className="flex-1">
-        <FocusAwareStatusBar />
 
-        {/* <ScrollView className="flex-1">{getRecordingLines()}</ScrollView> */}
-        <View className="flex-1 justify-center bg-black">
-          {recording && (
-            <Image
-              className="h-96 w-full"
-              source={{
-                uri: 'https://cdn.dribbble.com/users/214929/screenshots/4967879/media/cfc4a40efd67ae4810a0975a738d2145.gif',
-              }}
-            />
-          )}
+  return (
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.charcoal[800] }}
+      edges={['bottom']}
+    >
+      <FocusAwareStatusBar />
+      <View className="flex-1 bg-black">
+        <View className="flex-1 justify-center">
+          <Image
+            style={{
+              opacity: recording ? 1 : 0,
+              width: '100%',
+              height: 400,
+            }}
+            source={require('@assets/loading.gif')}
+          />
         </View>
-        <View className="items-center py-4">
-          {/* <Button
-            className="h-14 w-14 rounded-full border-2 border-white bg-red-500"
-            onPress={start}
-          /> */}
+        <View
+          className="items-center  py-4"
+          style={{
+            backgroundColor: colors.charcoal[800],
+          }}
+        >
           <Pressable
-            className="items-center justify-center rounded-full border-2 border-white p-1"
-            style={{ height: 50, width: 50 }}
+            style={{
+              height: 55,
+              width: 55,
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: 999,
+              borderColor: 'white',
+              borderWidth: 3,
+              padding: 2,
+            }}
             onPress={recording ? stop : start}
           >
             <Animated.View

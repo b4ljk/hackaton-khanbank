@@ -3,7 +3,8 @@ import { useReactNavigationDevTools } from '@dev-plugins/react-navigation';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
 import { SplashScreen, Stack, useNavigationContainerRef } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { Drawer } from 'expo-router/drawer';
+import { StyleSheet, View } from 'react-native';
 import FlashMessage from 'react-native-flash-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -15,6 +16,8 @@ export { ErrorBoundary } from 'expo-router';
 
 // Import  global CSS file
 import '../../global.css';
+
+import { Image, Text } from '@/ui';
 
 export const unstable_settings = {
   initialRouteName: '(app)',
@@ -34,9 +37,38 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <Providers>
-      <Stack>
-        <Stack.Screen name="audio" options={{ headerShown: false }} />
-      </Stack>
+      <Drawer
+        screenOptions={{
+          drawerContentContainerStyle: {
+            flex: 1,
+            justifyContent: 'center',
+          },
+          headerLeft: () => (
+            <View style={{ paddingHorizontal: 12 }}>
+              <Image
+                source={require('@assets/khanlogo.png')}
+                style={{ height: 35, width: 183 }}
+                // className="h-full w-full"
+              />
+            </View>
+          ),
+        }}
+      >
+        <Drawer.Screen
+          name="audio"
+          options={{
+            headerTitle: '',
+            title: 'Audio',
+          }}
+        />
+        <Drawer.Screen
+          name="loan"
+          options={{
+            headerTitle: '',
+            title: 'Зээл тооцогч',
+          }}
+        />
+      </Drawer>
     </Providers>
   );
 }

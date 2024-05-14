@@ -36,8 +36,8 @@ require('dotenv').config({
 const BUNDLE_ID = 'com.hackaton'; // ios bundle id
 const PACKAGE = 'com.hackaton'; // android package name
 const NAME = 'hackaton'; // app name
-const EXPO_ACCOUNT_OWNER = 'expo-owner'; // expo account owner
-const EAS_PROJECT_ID = 'c3e1075b-6fe7-4686-aa49-35b46a229044'; // eas project id
+const EXPO_ACCOUNT_OWNER = 'baljinnyamd'; // expo account owner
+const EAS_PROJECT_ID = 'ee9937a1-1d2c-49b0-95d4-b3f8fddc7a0e'; // eas project id
 const SCHEME = 'hackaton'; // app scheme
 
 /**
@@ -76,18 +76,16 @@ const client = z.object({
   BUNDLE_ID: z.string(),
   PACKAGE: z.string(),
   VERSION: z.string(),
+  SECRET_KEY: z.string(),
 
   // ADD YOUR CLIENT ENV VARS HERE
-  API_URL: z.string(),
-  VAR_NUMBER: z.number(),
-  VAR_BOOL: z.boolean(),
 });
 
 const buildTime = z.object({
   EXPO_ACCOUNT_OWNER: z.string(),
   EAS_PROJECT_ID: z.string(),
   // ADD YOUR BUILD TIME ENV VARS HERE
-  SECRET_KEY: z.string(),
+  SECRET_KEY: z.string().optional(),
 });
 
 /**
@@ -100,11 +98,9 @@ const _clientEnv = {
   BUNDLE_ID: withEnvSuffix(BUNDLE_ID),
   PACKAGE: withEnvSuffix(PACKAGE),
   VERSION: packageJSON.version,
+  SECRET_KEY: process.env.SECRET_KEY,
 
   // ADD YOUR ENV VARS HERE TOO
-  API_URL: process.env.API_URL,
-  VAR_NUMBER: Number(process.env.VAR_NUMBER),
-  VAR_BOOL: process.env.VAR_BOOL === 'true',
 };
 
 /**
